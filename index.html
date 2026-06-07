@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Expenses" />
+  <meta name="theme-color" content="#1a1a2e" />
+  <title>Daily Expenses</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon.png" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --bg: #0f0f1a;
+      --surface: #1a1a2e;
+      --surface2: #22223a;
+      --accent: #f0c060;
+      --accent2: #e08030;
+      --text: #f0ede8;
+      --text-muted: #888899;
+      --success: #60c080;
+      --error: #e06060;
+      --radius: 16px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      min-height: -webkit-fill-available;
+      padding: env(safe-area-inset-top, 20px) 0 env(safe-area-inset-bottom, 20px);
+    }
+
+    .app {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 24px 20px 40px;
+    }
+
+    header {
+      margin-bottom: 32px;
+    }
+
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 32px;
+      font-weight: 400;
+      color: var(--text);
+      letter-spacing: -0.5px;
+    }
+
+    .rupee-icon {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      font-family: 'DM Serif Display', serif;
+    }
+
+    .subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+      letter-spacing: 0.3px;
+    }
+
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 16px;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+
+    label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    input, textarea {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 16px;
+      font-family: 'DM Sans', sans-serif;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s;
+      -webkit-appearance: none;
+    }
+
+    input:focus, textarea:focus {
+      border-color: var(--accent);
+    }
+
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(1) opacity(0.4);
+    }
+
+    textarea {
+      resize: none;
+      height: 72px;
+    }
+
+    .amount-wrap {
+      position: relative;
+    }
+
+    .amount-prefix {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 18px;
+      color: var(--accent);
+      font-family: 'DM Serif Display', serif;
+      pointer-events: none;
+    }
+
+    .amount-wrap input {
+      padding-left: 32px;
+      font-size: 22px;
+      font-family: 'DM Serif Display', serif;
+      color: var(--accent);
+      letter-spacing: -0.5px;
+    }
+
+    /* Category selector */
+    .category-btn {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 15px;
+      font-family: 'DM Sans', sans-serif;
+      color: var(--text);
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: border-color 0.2s;
+    }
+
+    .category-btn:active { opacity: 0.8; }
+    .category-btn.open { border-color: var(--accent); }
+
+    .chevron {
+      font-size: 11px;
+      color: var(--text-muted);
+      transition: transform 0.2s;
+    }
+    .category-btn.open .chevron { transform: rotate(180deg); }
+
+    .dropdown {
+      display: none;
+      background: var(--surface2);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      margin-top: 8px;
+      overflow: hidden;
+      max-height: 260px;
+      overflow-y: auto;
+    }
+
+    .dropdown.show { display: block; }
+
+    .dropdown-item {
+      padding: 13px 16px;
+      font-size: 14px;
+      cursor: pointer;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      transition: background 0.15s;
+      color: var(--text);
+    }
+
+    .dropdown-item:last-child { border-bottom: none; }
+    .dropdown-item:active { background: rgba(240,192,96,0.1); }
+    .dropdown-item.selected {
+      color: var(--accent);
+      font-weight: 600;
+      background: rgba(240,192,96,0.07);
+    }
+
+    .submit-btn {
+      width: 100%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border: none;
+      border-radius: var(--radius);
+      padding: 18px;
+      font-size: 16px;
+      font-weight: 600;
+      font-family: 'DM Sans', sans-serif;
+      color: #1a1a2e;
+      cursor: pointer;
+      letter-spacing: 0.3px;
+      margin-top: 8px;
+      transition: opacity 0.2s, transform 0.1s;
+      position: relative;
+    }
+
+    .submit-btn:active { transform: scale(0.98); opacity: 0.9; }
+    .submit-btn:disabled { opacity: 0.5; }
+
+    .spinner {
+      display: none;
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(26,26,46,0.3);
+      border-top-color: #1a1a2e;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin: 0 auto;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--surface2);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 100px;
+      padding: 12px 24px;
+      font-size: 14px;
+      font-weight: 500;
+      white-space: nowrap;
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      z-index: 100;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast.success { color: var(--success); border-color: rgba(96,192,128,0.3); }
+    .toast.error { color: var(--error); border-color: rgba(224,96,96,0.3); }
+
+    /* Recent entries */
+    .recent-title {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .entry-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .entry-item:last-child { border-bottom: none; }
+
+    .entry-cat {
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+
+    .entry-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .entry-amount {
+      font-family: 'DM Serif Display', serif;
+      font-size: 18px;
+      color: var(--accent);
+    }
+
+    .divider {
+      height: 1px;
+      background: rgba(255,255,255,0.05);
+      margin: 8px 0 16px;
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="header-top">
+      <h1>Daily Expenses</h1>
+      <div class="rupee-icon">₹</div>
+    </div>
+    <p class="subtitle" id="todayLabel"></p>
+  </header>
+
+  <div class="card">
+    <label>Date</label>
+    <input type="date" id="dateInput" />
+  </div>
+
+  <div class="card">
+    <label>Category</label>
+    <button class="category-btn" id="categoryBtn" onclick="toggleDropdown()">
+      <span id="categoryLabel">Select category</span>
+      <span class="chevron">▼</span>
+    </button>
+    <div class="dropdown" id="dropdown"></div>
+  </div>
+
+  <div class="card">
+    <label>Amount</label>
+    <div class="amount-wrap">
+      <span class="amount-prefix">₹</span>
+      <input type="number" id="amountInput" placeholder="0.00" inputmode="decimal" step="0.01" min="0" />
+    </div>
+  </div>
+
+  <div class="card">
+    <label>Comment <span style="opacity:0.4;font-size:10px;letter-spacing:0">(optional)</span></label>
+    <textarea id="commentInput" placeholder="Add a note..."></textarea>
+  </div>
+
+  <button class="submit-btn" id="submitBtn" onclick="handleSubmit()">
+    <span id="btnText">Save to Sheet</span>
+    <div class="spinner" id="spinner"></div>
+  </button>
+
+  <div id="recentSection" style="display:none; margin-top:32px;">
+    <div class="divider"></div>
+    <p class="recent-title">Recent Entries</p>
+    <div id="recentList"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // ⚠️ Your Google Apps Script URL
+  const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzCOzrJRj3vw481YtVZvKjnywG_yRoDv-65XRVlIravdYOToBLLtF_jFYSz_4q8nmbzEw/exec";
+  const SECRET = "myexpenses2026";
+
+  const CATEGORIES = [
+    "Dress / Beauty", "Jewels", "Books", "Toys / Stationary",
+    "Provision", "Gadgets / Subscriptions", "Food", "Fuel",
+    "Misty (Dog)", "Misc", "Medicals", "Home Repair / Appliances",
+    "Gardening", "Vehicle / Service", "Tour / Travel",
+    "Mobile, Internet", "EB", "Insurance Premium / Mutualfund",
+    "Maya, SK (Rent-TVM / School)", "House Monthly Expense"
+  ];
+
+  let selectedCategory = null;
+  let recentEntries = [];
+
+  // Init date
+  function todayStr() {
+    const d = new Date();
+    return d.toISOString().split('T')[0];
+  }
+
+  document.getElementById('dateInput').value = todayStr();
+
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const now = new Date();
+  document.getElementById('todayLabel').textContent =
+    `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+
+  // Build dropdown
+  const dropdown = document.getElementById('dropdown');
+  CATEGORIES.forEach(cat => {
+    const item = document.createElement('div');
+    item.className = 'dropdown-item';
+    item.textContent = cat;
+    item.onclick = () => selectCategory(cat);
+    dropdown.appendChild(item);
+  });
+
+  function toggleDropdown() {
+    const btn = document.getElementById('categoryBtn');
+    const dd = document.getElementById('dropdown');
+    const isOpen = dd.classList.contains('show');
+    dd.classList.toggle('show');
+    btn.classList.toggle('open');
+  }
+
+  function selectCategory(cat) {
+    selectedCategory = cat;
+    document.getElementById('categoryLabel').textContent = cat;
+    document.getElementById('dropdown').classList.remove('show');
+    document.getElementById('categoryBtn').classList.remove('open');
+    // highlight selected
+    document.querySelectorAll('.dropdown-item').forEach(el => {
+      el.classList.toggle('selected', el.textContent === cat);
+    });
+  }
+
+  // Close dropdown on outside click
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.card')) {
+      document.getElementById('dropdown').classList.remove('show');
+      document.getElementById('categoryBtn').classList.remove('open');
+    }
+  });
+
+  function showToast(msg, type) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = `toast ${type} show`;
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  function setLoading(on) {
+    document.getElementById('btnText').style.display = on ? 'none' : 'block';
+    document.getElementById('spinner').style.display = on ? 'block' : 'none';
+    document.getElementById('submitBtn').disabled = on;
+  }
+
+  function addRecentEntry(date, category, amount) {
+    recentEntries.unshift({ date, category, amount });
+    if (recentEntries.length > 5) recentEntries.pop();
+
+    const section = document.getElementById('recentSection');
+    const list = document.getElementById('recentList');
+    section.style.display = 'block';
+    list.innerHTML = recentEntries.map(e => `
+      <div class="entry-item">
+        <div>
+          <div class="entry-cat">${e.category}</div>
+          <div class="entry-meta">${e.date}</div>
+        </div>
+        <div class="entry-amount">₹${parseFloat(e.amount).toLocaleString('en-IN')}</div>
+      </div>
+    `).join('');
+  }
+
+  async function handleSubmit() {
+    const date = document.getElementById('dateInput').value;
+    const amount = document.getElementById('amountInput').value;
+    const comment = document.getElementById('commentInput').value;
+
+    if (!date) { showToast('Please select a date', 'error'); return; }
+    if (!selectedCategory) { showToast('Please select a category', 'error'); return; }
+    if (!amount || parseFloat(amount) <= 0) { showToast('Please enter a valid amount', 'error'); return; }
+
+    setLoading(true);
+    try {
+      const response = await fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ date, category: selectedCategory, amount: parseFloat(amount), comment, secret: SECRET })
+      });
+      const result = await response.json();
+
+      if (result.success) {
+        addRecentEntry(date, selectedCategory, amount);
+        document.getElementById('amountInput').value = '';
+        document.getElementById('commentInput').value = '';
+        showToast(`✓ ₹${parseFloat(amount).toLocaleString('en-IN')} saved!`, 'success');
+      } else {
+        showToast(result.error || 'Something went wrong', 'error');
+      }
+    } catch (err) {
+      showToast('Network error — check connection', 'error');
+    } finally {
+      setLoading(false);
+    }
+  }
+</script>
+</body>
+</html>
